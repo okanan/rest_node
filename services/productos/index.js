@@ -1,4 +1,5 @@
 const faker = require('faker');
+const boom = require('@hapi/boom')
 
 class productosServices {
 
@@ -17,6 +18,7 @@ class productosServices {
         nombre: faker.commerce.productName(),
         precio: parseInt(faker.commerce.price(), 10),
         imagen: faker.image.imageUrl(),
+        isBlocked: faker.datatype.boolean()
       })
       
     }
@@ -28,7 +30,18 @@ class productosServices {
   }
 
   async buscar(id){
-    return this.productos.find(item => item.id === id);
+    
+    const producto = this.productos.find(item => item.id === id);
+
+    if(!producto){
+      throw boom.notFound('Producto no encontrado')
+    }
+    if(producto.isBlocked){
+      throw boom.conflict('Producto esta bloqueado')
+    }
+
+    return producto
+
   }
 
   async eliminar(id){
@@ -47,7 +60,7 @@ class productosServices {
     const productoIndex = this.productos.findIndex(item => item.id === id);
     
     if(productoIndex === -1){
-      throw new Error('Producto no encontrado')
+      throw boom.notFound('Producto no encontrado')
     }
     const producto = productoBase[0]
 
